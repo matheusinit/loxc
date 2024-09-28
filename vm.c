@@ -6,9 +6,29 @@
 
 VM vm;
 
-void initVM() {}
+static void resetStack()
+{
+  vm.stackTop = vm.stack;
+}
+
+void initVM()
+{
+  resetStack();
+}
 
 void freeVM() {}
+
+void push(Value value)
+{
+  *vm.stackTop = value;
+  vm.stackTop++;
+}
+
+Value pop()
+{
+  vm.stackTop--;
+  return *vm.stackTop;
+}
 
 static InterpretResult run()
 {
@@ -17,11 +37,16 @@ static InterpretResult run()
 
   for (;;)
   {
-    printf("vm.chunk->code: %d\n", vm.chunk->code);
-    printf("ip: %d ", (int)(vm.ip));
-    printf("ha: %d ", (int)(vm.ip - vm.chunk->code));
-
 #ifdef DEBUG_TRACE_EXECUTION
+    printf("        ");
+    for (Value *slot = vm.stack; slot < vm.stackTop; slot++)
+    {
+      printf("[ ");
+      printValue(*slot);
+      printf(" ]");
+    }
+    printf("\n");
+
     disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
 #endif
 
@@ -31,6 +56,8 @@ static InterpretResult run()
     {
     case OP_RETURN:
     {
+      printValue(pop());
+      printf("\n");
       return INTERPRET_OK;
     }
     case OP_CONSTANT:
@@ -38,6 +65,11 @@ static InterpretResult run()
       Value constant = READ_CONSTANT();
       printValue(constant);
       printf("\n");
+      break;
+    }
+    case OP_NEGATE:
+    {
+      push(-pop());
       break;
     }
     }
