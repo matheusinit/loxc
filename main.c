@@ -3,9 +3,12 @@
 #include "common.h"
 #include "chunk.h"
 #include "debug.h"
+#include "vm.h"
 
 int main()
 {
+  initVM();
+
   Chunk chunk;
   initChunk(&chunk);
   int constant = addConstant(&chunk, 1.2);
@@ -13,8 +16,11 @@ int main()
   writeChunk(&chunk, constant, 123);
   writeChunk(&chunk, OP_RETURN, 123);
 
+  interpret(&chunk);
+
   disassembleChunk(&chunk, "test chunk");
 
+  freeVM();
   freeChunk(&chunk);
 
   return 0;
